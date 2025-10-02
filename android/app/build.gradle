@@ -1,0 +1,31 @@
+// android/app/build.gradle
+
+apply plugin: 'com.android.application'
+// apply plugin: 'com.google.gms.google-services'  // solo si usas SDKs nativos de Firebase
+
+android {
+    namespace "com.fitcontrol.app"   // usa tu appId
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId "com.fitcontrol.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'

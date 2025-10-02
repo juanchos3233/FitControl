@@ -1,0 +1,22 @@
+// android/build.gradle  (RAÍZ)
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // AGP compatible con Gradle 8.x
+        classpath 'com.android.tools.build:gradle:8.13.0'
+        // Si NO usas SDKs nativos de Firebase, puedes omitir google-services
+        // classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
+
+apply from: "variables.gradle"
+
+// ❌ NO pongas allprojects { repositories { ... } } aquí con Gradle moderno
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
