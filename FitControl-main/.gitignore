@@ -1,0 +1,31 @@
+# ---- Node / Vite ----
+node_modules/
+dist/
+.vite/
+*.log
+
+# ---- Env (claves privadas) ----
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# ---- Sistema / IDE ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---- Capacitor / Android Studio ----
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+android/captures/
+.gradle/
+
+# ---- Output APKs ----
+*.apk
+*.aab
