@@ -1,0 +1,142 @@
+import { useEffect, useState } from 'react'
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
+import { auth, db } from '../firebase'
+import { useNavigate, Link } from 'react-router-dom'
+import { isEmail } from '../lib/validators'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+
+export default function Login(){
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [show, setShow] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+
+  // Redirigir usuarios ya logueados
+  useEffect(()=>{
+    const unsub = onAuthStateChanged(auth, async (user)=>{
+      if(user && window.location.pathname === '/login'){
+        try{
+          const userRef = doc(db, 'usuarios', user.uid)
+          const userDoc = await getDoc(userRef)
+
+          // Crear documento vacío si no existe
+          if(!userDoc.exists()){
+            await setDoc(userRef, {})
+          }
+
+          const metaElegida = userDoc.data()?.metaElegida
+          if(metaElegida){
+            navigate('/dashboard', { replace: true })
+          } else {
+            navigate('/objetivos', { replace: true })
+          }
+        }catch{
+          navigate('/objetivos', { replace: true })
+        }
+      }
+    })
+    return ()=>unsub()
+  }, [navigate])
+
+  const emailOk = isEmail(email)
+  const passOk = password.trim().length > 0
+  const formOk = emailOk && passOk
+
+  async function onSubmit(e: React.FormEvent){
+    e.preventDefault()
+    if(!formOk) return
+    setError(null)
+    setLoading(true)
+    try{
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password)
+      const uid = userCredential.user.uid
+
+      const userRef = doc(db, 'usuarios', uid)
+      const userDoc = await getDoc(userRef)
+
+      // Crear documento vacío si no existe
+      if(!userDoc.exists()){
+        await setDoc(userRef, {})
+      }
+
+      const metaElegida = userDoc.data()?.metaElegida
+
+      if(metaElegida){
+        navigate('/dashboard', { replace: true })
+      } else {
+        navigate('/objetivos', { replace: true })
+      }
+
+    }catch(err:any){
+      const code = err?.code || ''
+      if(code.includes('invalid-credential')) setError('Email o contraseña inválidos.')
+      else setError('No se pudo iniciar sesión. Intenta nuevamente.')
+    }finally{
+      setLoading(false)
+    }
+  }
+
+  const emailError = !emailOk && email.length>0
+  const passError  = !passOk && password.length>0
+
+  return (
+    <div className="card">
+      <h2 className="mb4">Iniciar Sesión</h2>
+      <p className="small">Ingresa con tu correo y contraseña</p>
+      <div className="space"></div>
+
+      <form onSubmit={onSubmit}>
+        <label htmlFor="login-email">Email</label>
+        <div className="input">
+          <input
+            id="login-email"
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+            type="email"
+            placeholder="tucorreo@dominio.com"
+            aria-invalid={emailError ? 'true' : 'false'}
+            aria-describedby={emailError ? 'login-email-error' : undefined}
+          />
+        </div>
+        {emailError && (
+          <div id="login-email-error" className="error" role="alert">Email inválido</div>
+        )}
+
+        <label htmlFor="login-password">Contraseña</label>
+        <div className="input">
+          <input
+            id="login-password"
+            value={password}
+            onChange={e=>setPassword(e.target.value)}
+            type={show ? 'text' : 'password'}
+            placeholder="••••••••"
+            aria-invalid={passError ? 'true' : 'false'}
+            aria-describedby={passError ? 'login-pass-error' : undefined}
+          />
+          <button type="button" onClick={()=>setShow(v=>!v)} aria-label={show?'Ocultar contraseña':'Mostrar contraseña'}>
+            {show ? 'Ocultar' : 'Mostrar'}
+          </button>
+        </div>
+        {passError && (
+          <div id="login-pass-error" className="error" role="alert">Contraseña requerida</div>
+        )}
+
+        <div className="links">
+          <span></span>
+          <Link to="/reset-password">¿Olvidaste tu contraseña?</Link>
+        </div>
+
+        <div className="space"></div>
+        <button className="primary" disabled={!formOk || loading} type="submit">
+          {loading ? 'Ingresando...' : 'Ingresar'}
+        </button>
+        {error && <div className="error" role="alert">{error}</div>}
+      </form>
+
+      <div className="space"></div>
+      <div className="center small">¿No tienes cuenta? <Link to="/register">Crear cuenta</Link></div>
+    </div>
+  )
+}
