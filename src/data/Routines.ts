@@ -96,7 +96,7 @@ export const routines = {
 
   mantener_peso: [
     {
-      day: "Rutina 1 - Full Body Equilibrado",
+      day: "Rutina 1 - Full Body Equilibrado (200 kcal)",
       exercises: [
         { name: "Sentadillas", sets: 3, reps: "12", gif: "https://paramujerfitness.com/wp-content/uploads/2022/03/Barbell-Narrow-Stance-Squat-female_Thighs_1080.gif" },
         { name: "Flexiones", sets: 3, reps: "10", gif: "https://fitcron.com/wp-content/uploads/2021/03/06621301-Push-up-m_Chest-FIX_720.gif" },
@@ -107,36 +107,36 @@ export const routines = {
       ]
     },
     {
-      day: "Rutina 2 - Tren Inferior Moderado",
+      day: "Rutina 2 - Tren Inferior Moderado (210 kcal)",
       exercises: [
-        { name: "Zancadas", sets: 3, reps: "12", gif: "https://media.tenor.com/LOx8xjoLxTMAAAAC/lunges.gif" },
-        { name: "Elevaciones de talones", sets: 3, reps: "15", gif: "https://media.tenor.com/4q-7dCgjqwsAAAAC/calf-raises.gif" },
-        { name: "Peso muerto rumano", sets: 3, reps: "10", gif: "https://media.tenor.com/QZ_JmZtKr1EAAAAC/deadlift.gif" },
-        { name: "Step-ups", sets: 3, reps: "12", gif: "https://media.tenor.com/nGAknvDS3tUAAAAC/step-up.gif" },
-        { name: "Puente de glúteo", sets: 3, reps: "15", gif: "https://media.tenor.com/Q9jKeML-ZpAAAAAC/hip-bridge.gif" },
-        { name: "Sentadilla sumo", sets: 3, reps: "12", gif: "https://media.tenor.com/znv03WR_qDUAAAAC/sumo-squat.gif" }
+        { name: "Zancadas", sets: 3, reps: "12", gif: "https://fitcron.com/wp-content/uploads/2021/04/15541301-Dumbbell-Split-Jump_Plyometric_720.gif" },
+        { name: "Elevaciones de talones", sets: 3, reps: "15", gif: "https://i.pinimg.com/736x/0d/82/03/0d820388a2f8502bc9722cd78a11eddc.jpg" },
+        { name: "Peso muerto rumano", sets: 3, reps: "10", gif: "https://fitcron.com/wp-content/uploads/2021/04/00851301-Barbell-Romanian-Deadlift_Hips_720.gif" },
+        { name: "Step-ups", sets: 3, reps: "12", gif: "https://www.inspireusafoundation.org/wp-content/uploads/2023/05/lateral-step-up-muscles.gif" },
+        { name: "Puente de glúteo", sets: 3, reps: "15", gif: "https://paramujerfitness.com/wp-content/uploads/2022/03/Barbell-Hip-Thrust-female_Hips_1080.gif" },
+        { name: "Sentadilla sumo", sets: 3, reps: "12", gif: "https://www.inspireusafoundation.org/wp-content/uploads/2021/12/how-to-do-a-kettlebell-sumo-squat.gif" }
       ]
     },
     {
-      day: "Rutina 3 - Tren Superior Moderado",
+      day: "Rutina 3 - Tren Superior Moderado (190 kcal)",
       exercises: [
-        { name: "Press militar", sets: 3, reps: "10", gif: "https://media.tenor.com/XwpUjYhvS2sAAAAC/dumbbell-shoulder-press.gif" },
-        { name: "Remo con barra", sets: 3, reps: "10", gif: "https://media.tenor.com/Mb3sVvP4KhIAAAAC/barbell-row.gif" },
-        { name: "Curl bíceps", sets: 3, reps: "12", gif: "https://media.tenor.com/1cLkb5M6bPgAAAAC/bicep-curl.gif" },
-        { name: "Tríceps fondos", sets: 3, reps: "12", gif: "https://media.tenor.com/eVnHtd17EoAAAAAC/dips-triceps.gif" },
-        { name: "Aperturas con mancuernas", sets: 3, reps: "10", gif: "https://media.tenor.com/1-jzY9CzF3IAAAAC/dumbbell-fly.gif" },
-        { name: "Flexiones inclinadas", sets: 3, reps: "12", gif: "https://media.tenor.com/DhZMVzPft5gAAAAC/incline-push-up.gif" }
+        { name: "Press militar", sets: 3, reps: "10", gif: "https://fitcron.com/wp-content/uploads/2021/04/04261301-Dumbbell-Standing-Overhead-Press_shoulder_720.gif" },
+        { name: "Remo con barra", sets: 3, reps: "10", gif: "https://adictosalgym.com/wp-content/uploads/2022/04/00271301-Barbell-Bent-Over-Row_Back-FIX_1080.gif" },
+        { name: "Curl bíceps", sets: 3, reps: "12", gif: "https://www.inspireusafoundation.org/wp-content/uploads/2023/01/inner-bicep-curl.gif" },
+        { name: "Tríceps fondos", sets: 3, reps: "12", gif: "https://www.deportrainer.com/img/cms/Post%20de%20blog/ejercicios_para_triceps/fondo-de-tr%C3%ADceps-con-banco.jpg" },
+        { name: "Aperturas con mancuernas", sets: 3, reps: "10", gif: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEib4kVT2Z93lvgBITRFYXrNBQEQrMajoCVGmmZTyOcf1AxA3xVTYQ72ZfzneHRCimR5b6296jcU0HdW-F8HattgmnmmIzickNT8MHUDJT2pr6sORIGh-O2Wvk7KCLxwb7k7tsre56F2xqbaYf5zPyTVHZIF7a52-tfvsBlhEXCBOGB6am619RksvzIIEw/w400-h306/Aperturas-con-mancuernas.gif" },
+        { name: "Flexiones inclinadas", sets: 3, reps: "12", gif: "https://www.inspireusafoundation.org/wp-content/uploads/2023/05/incline-push-ups-benefits.png" }
       ]
     },
     {
-      day: "Rutina 4 - Core + Movilidad",
+      day: "Rutina 4 - Core + Movilidad (120 kcal)",
       exercises: [
-        { name: "Plancha", sets: 3, reps: "40 seg", gif: "https://media.tenor.com/wcC3Z9sSoXIAAAAC/plank-core.gif" },
-        { name: "Abdominales bicicleta", sets: 3, reps: "20", gif: "https://media.tenor.com/KzXh-u5SRrYAAAAC/bicycle-crunch.gif" },
-        { name: "Superman", sets: 3, reps: "15", gif: "https://media.tenor.com/5yq8UdGKoW8AAAAC/superman-back.gif" },
-        { name: "Estiramiento de cobra", sets: 2, reps: "30 seg", gif: "https://media.tenor.com/LV4tGivZQv0AAAAC/cobra-stretch.gif" },
-        { name: "Torsión de tronco", sets: 2, reps: "30 seg", gif: "https://media.tenor.com/zTeJ6C4CDhEAAAAC/torso-twist.gif" },
-        { name: "Plancha lateral", sets: 2, reps: "30 seg por lado", gif: "https://media.tenor.com/ysUvbzAzg1EAAAAC/side-plank.gif" }
+        { name: "Plancha", sets: 3, reps: "40 seg", gif: "https://boxlifemagazine.com/wp-content/uploads/2023/08/image.gif" },
+        { name: "Abdominales bicicleta", sets: 3, reps: "20", gif: "https://www.mundoboaforma.com.br/wp-content/uploads/2021/03/abdominal-bicicleta-no-ar.gif" },
+        { name: "Superman", sets: 3, reps: "15", gif: "https://i.pinimg.com/originals/a5/ed/ce/a5edced7aa49795bf0296350dbb88d57.png" },
+        { name: "Estiramiento de cobra", sets: 2, reps: "30 seg", gif: "https://i.pinimg.com/originals/06/9d/24/069d244bb39c328d3149c89f74bc726e.png" },
+        { name: "Torsión de tronco", sets: 2, reps: "30 seg", gif: "https://rdv-files.nyc3.digitaloceanspaces.com/pub/html/files_html/4/2/2/000074224.png" },
+        { name: "Plancha lateral", sets: 2, reps: "30 seg por lado", gif: "https://fitcron.com/wp-content/uploads/2021/04/07151301-Side-Plank-m_Waist_720.gif" }
       ]
     }
   ]

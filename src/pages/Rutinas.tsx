@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { routines } from "../data/Routines";
-import "./RoutinePage.css"; // aquí se manejarán los estilos específicos visuales
-import { useNavigate } from "react-router-dom"; // ⬅️ agrega esto al inicio
+import "./RoutinePage.css";
+import { useNavigate } from "react-router-dom";
 
 export default function Rutinas() {
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ export default function Rutinas() {
   const [userRoutines, setUserRoutines] = useState<any[] | null>(null);
   const [selectedRoutine, setSelectedRoutine] = useState<number | null>(null);
   const [completedExercises, setCompletedExercises] = useState<Record<number, boolean>>({});
-  const navigate = useNavigate(); // ✅ para redirigir correctamente al dashboard
+  const navigate = useNavigate();
 
   useEffect(() => {
     const load = async () => {
@@ -83,12 +83,12 @@ export default function Rutinas() {
   }, []);
 
   const handleSelectRoutine = (index: number) => {
-    setSelectedRoutine(index);
     setCompletedExercises({});
+    setTimeout(() => setSelectedRoutine(index), 0);
   };
 
   const handleCompleteExercise = (i: number) => {
-    setCompletedExercises(prev => ({
+    setCompletedExercises((prev) => ({
       ...prev,
       [i]: !prev[i],
     }));
@@ -106,14 +106,17 @@ export default function Rutinas() {
   return (
     <div className="routine-container">
       <h2 className="title">Mi entrenamiento</h2>
-      <p className="goal-text">Objetivo: <strong>{objetivoTexto}</strong></p>
+      <p className="goal-text">
+        Objetivo: <strong>{objetivoTexto}</strong>
+      </p>
 
-      {/* ✅ Cambio aquí: antes era "!selectedRoutine", ahora es "selectedRoutine === null" */}
       {selectedRoutine === null ? (
         <>
           <div className="week-days">
             {["dom", "lun", "mar", "mié", "jue", "vie", "sáb"].map((d, i) => (
-              <div key={i} className={`day ${i === new Date().getDay() ? "active" : ""}`}>{d}</div>
+              <div key={i} className={`day ${i === new Date().getDay() ? "active" : ""}`}>
+                {d}
+              </div>
             ))}
           </div>
 
@@ -136,6 +139,11 @@ export default function Rutinas() {
         </>
       ) : (
         <div className="routine-detail">
+          {/* ✅ Botón de volver estilizado */}
+          <button className="back-btn" onClick={() => setSelectedRoutine(null)}>
+            ← Volver a las rutinas
+          </button>
+
           <h3>{userRoutines[selectedRoutine].day}</h3>
           <div className="exercise-list">
             {userRoutines[selectedRoutine].exercises.map((ex: any, i: number) => (
@@ -148,7 +156,9 @@ export default function Rutinas() {
                 <img src={ex.gif} alt={ex.name} width="100" />
                 <div>
                   <h4>{ex.name}</h4>
-                  <p>{ex.sets} x {ex.reps}</p>
+                  <p>
+                    {ex.sets} x {ex.reps}
+                  </p>
                 </div>
               </div>
             ))}
