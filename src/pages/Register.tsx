@@ -20,10 +20,16 @@ export default function Register(){
 
   const navigate = useNavigate()
 
+  // 🔹 Evita redirigir al dashboard si aún no tiene meta
   useEffect(()=>{
-    const unsub = onAuthStateChanged(auth, (u)=>{ if(u) navigate('/dashboard') })
+    const unsub = onAuthStateChanged(auth, (u)=>{ 
+      // si el usuario ya tiene sesión, pero aún no se seleccionó meta, lo mandamos a /objetivos
+      if(u){
+        navigate('/objetivos')
+      }
+    })
     return ()=>unsub()
-  }, [])
+  }, [navigate])
 
   const emailOk = isEmail(email)
   const passOk = isStrongPassword(password)
@@ -57,7 +63,11 @@ export default function Register(){
         updatedAt: serverTimestamp(),
       })
       setSuccess('Cuenta creada correctamente. Entrando...')
-      navigate('/dashboard', { replace: true })
+      
+      // 🔹 Aquí el cambio importante:
+      // Justo después de crear la cuenta, redirigimos a la selección de meta
+      navigate('/objetivos', { replace: true })
+
     }catch(err:any){
       const code = err?.code || ''
       if(code.includes('auth/email-already-in-use')) setError('Este correo ya está registrado.')
