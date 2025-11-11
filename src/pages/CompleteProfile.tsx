@@ -1,105 +1,89 @@
-import { useEffect, useRef, useState } from 'react'
-import { auth, db } from '../firebase'
-import { onAuthStateChanged } from 'firebase/auth'
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
-import { isName, isNonEmpty } from '../lib/validators'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react';
+import { auth } from '../firebase';                 // ⬅️ AJUSTA si tu ruta cambia
+import { useNavigate } from 'react-router-dom';
+import { saveUserProfile, getUserProfile } from '../services/profile';
+import type { UserProfile } from '../types/models';
+import { apiGenerateNutritionPlan } from '../services/api';
 
-export default function CompleteProfile(){
-  const [nombre, setNombre] = useState('')
-  const [apellido, setApellido] = useState('')
-  const [direccion, setDireccion] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
-  const [uid, setUid] = useState<string | null>(null)
-  const [email, setEmail] = useState<string>('')
-  const cancelled = useRef(false)
+const initial: UserProfile = { sexo: 'M', edad: 18, peso: 60, altura: 170, actividad: 'ligero', goal: 'mantener' };
 
-  useEffect(()=>{
-    cancelled.current = false
-    const unsub = onAuthStateChanged(auth, async (u)=>{
-      if(!u){ navigate('/login'); return }
-      setUid(u.uid); setEmail(u.email || '')
-      const ref = doc(db, 'users', u.uid)
-      try{
-        const snap = await getDoc(ref)
-        if(snap.exists()){ navigate('/dashboard', { replace: true }); return }
-      }catch{}
-      const display = (u.displayName || '').trim()
-      if(display){
-        const parts = display.split(' ')
-        setNombre(parts[0] || ''); setApellido(parts.slice(1).join(' ') || '')
+export default function CompleteProfile() {
+  const [form, setForm]   = useState<UserProfile>(initial);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string|null>(null);
+  const nav = useNavigate();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const p = await getUserProfile();
+        if (p?.profileCompleted) setForm({ ...initial, ...p });
+      } catch {}
+    })();
+  }, []);
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => {
+      if (['edad','peso','altura'].includes(name)) return { ...prev, [name]: Number(value) || 0 } as UserProfile;
+      return { ...prev, [name]: value } as UserProfile;
+    });
+  };
+
+  const onSubmit = async (regenerarPlan = true) => {
+    setLoading(true); setError(null);
+    try {
+      await saveUserProfile(form);
+      if (regenerarPlan) {
+        const u = auth.currentUser!;
+        await apiGenerateNutritionPlan({
+          uid: u.uid,
+          goal: form.goal,
+          profile: { sexo: form.sexo, edad: form.edad, peso: form.peso, altura: form.altura, actividad: form.actividad },
+        });
       }
-      if(!cancelled.current) setLoading(false)
-    })
-
-    const t = setTimeout(()=>{ if(loading){ setLoading(false); setError('Tiempo de espera agotado. Revisa la conexión/credenciales.') } }, 6000)
-    return ()=>{ cancelled.current = true; clearTimeout(t); unsub() }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const nombreOk = isName(nombre)
-  const apellidoOk = isName(apellido)
-  const direccionOk = isNonEmpty(direccion)
-  const formOk = nombreOk && apellidoOk && direccionOk
-
-  async function onSubmit(e: React.FormEvent){
-    e.preventDefault()
-    if(!formOk || !uid) return
-    setSaving(true); setError(null)
-    try{
-      await setDoc(doc(db, 'users', uid), {
-        id: uid,
-        email: email.toLowerCase(),
-        nombre: nombre.trim(),
-        apellido: apellido.trim(),
-        direccion: direccion.trim(),
-        emailVerified: auth.currentUser?.emailVerified ?? false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
-      navigate('/dashboard', { replace: true })
-    }catch(e:any){
-      setError('No se pudo guardar el perfil. Intenta nuevamente.')
-    }finally{
-      setSaving(false)
+      nav('/alimentacion');
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo guardar el perfil');
+    } finally {
+      setLoading(false);
     }
-  }
-
-  if(loading) return <div className="card"><p>Cargando...</p></div>
+  };
 
   return (
-    <div className="card">
-      <h2 className="mb4">Completar perfil</h2>
-      <p className="small">Tu cuenta está creada. Falta guardar tus datos básicos.</p>
-      <div className="space"></div>
-
-      <form onSubmit={onSubmit}>
-        <label>Nombre</label>
-        <div className="input"><input value={nombre} onChange={e=>setNombre(e.target.value)} placeholder="Juan" aria-invalid="false" /></div>
-        {!nombreOk && nombre.length>0 && <div className="error" role="alert">Nombre inválido (2–50, sin dígitos)</div>}
-
-        <label>Apellido</label>
-        <div className="input"><input value={apellido} onChange={e=>setApellido(e.target.value)} placeholder="Pérez" aria-invalid="false" /></div>
-        {!apellidoOk && apellido.length>0 && <div className="error" role="alert">Apellido inválido (2–50, sin dígitos)</div>}
-
-        <label>Dirección</label>
-        <div className="input"><input value={direccion} onChange={e=>setDireccion(e.target.value)} placeholder="Calle 1 # 2-34" aria-invalid="false" /></div>
-        {!direccionOk && direccion.length>0 && <div className="error" role="alert">La dirección es obligatoria (máx. 120)</div>}
-
-        <div className="space"></div>
-        <button className="primary" type="submit" disabled={!formOk || saving}>
-          {saving ? 'Guardando...' : 'Guardar perfil'}
-        </button>
-        {error && <div className="error" role="alert">{error}</div>}
-      </form>
-
-      <div className="space"></div>
-      <div className="center small">
-        ¿No eres tú? <Link to="/login">Cerrar sesión e iniciar con otra cuenta</Link>
+    <div className="container" style={{ maxWidth: 680, margin: '48px auto' }}>
+      <h2>Completar perfil</h2>
+      {error && <div className="card" style={{ marginTop: 12, padding: 12, color: '#f66' }}>{error}</div>}
+      <div className="card" style={{ padding: 16, marginTop: 16 }}>
+        <div className="grid" style={{ display:'grid', gap:12, gridTemplateColumns:'1fr 1fr' }}>
+          <label>Sexo
+            <select name="sexo" value={form.sexo} onChange={onChange}>
+              <option value="M">Masculino</option><option value="F">Femenino</option>
+            </select>
+          </label>
+          <label>Edad<input type="number" name="edad" value={form.edad} onChange={onChange} min={12} /></label>
+          <label>Peso (kg)<input type="number" step="0.1" name="peso" value={form.peso} onChange={onChange} /></label>
+          <label>Altura (cm)<input type="number" name="altura" value={form.altura} onChange={onChange} /></label>
+          <label>Actividad
+            <select name="actividad" value={form.actividad} onChange={onChange}>
+              <option value="sedentario">Sedentario</option><option value="ligero">Ligero</option>
+              <option value="moderado">Moderado</option><option value="intenso">Intenso</option>
+              <option value="atleta">Atleta</option>
+            </select>
+          </label>
+          <label>Objetivo
+            <select name="goal" value={form.goal} onChange={onChange}>
+              <option value="bajar">Bajar peso</option>
+              <option value="mantener">Mantener peso</option>
+              <option value="subir">Subir peso</option>
+            </select>
+          </label>
+        </div>
+        <div style={{ marginTop: 16, display:'flex', gap:12 }}>
+          <button disabled={loading} onClick={() => onSubmit(true)}>{loading?'Guardando…':'Guardar y generar plan'}</button>
+          <button disabled={loading} onClick={() => onSubmit(false)}>Guardar (sin generar plan)</button>
+        </div>
       </div>
     </div>
-  )
+  );
 }

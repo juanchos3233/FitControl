@@ -2,15 +2,30 @@
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { routines } from "../data/Routines";
+import { routines } from "../data/Routines"; 
 import "./RoutinePage.css";
 import { useNavigate } from "react-router-dom";
+
+type Exercise = {
+  name: string;
+  sets: number;
+  reps: string;
+  gif: string;
+};
+
+type DayRoutine = {
+  day: string;
+  description?: string;
+  exercises: Exercise[];
+};
+
+type RoutinesMap = Record<"subir_masa" | "bajar_peso" | "mantener_peso", DayRoutine[]>;
 
 export default function Rutinas() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [objetivoTexto, setObjetivoTexto] = useState<string | null>(null);
-  const [userRoutines, setUserRoutines] = useState<any[] | null>(null);
+  const [userRoutines, setUserRoutines] = useState<DayRoutine[] | null>(null);
   const [selectedRoutine, setSelectedRoutine] = useState<number | null>(null);
   const [completedExercises, setCompletedExercises] = useState<Record<number, boolean>>({});
   const navigate = useNavigate();
@@ -28,21 +43,32 @@ export default function Rutinas() {
         }
 
         const uid = user.uid;
-        const refUsuarios = doc(db, "usuarios", uid);
-        const snapUsuarios = await getDoc(refUsuarios);
 
+        // 1) Buscar primero en 'users', luego en 'usuarios'
         let objetivoFromDb: string | undefined;
+        let objetivoKeyFromDb: string | undefined;
 
-        if (snapUsuarios.exists()) {
-          const data = snapUsuarios.data() as any;
+        const refUsers = doc(db, "users", uid);
+        const snapUsers = await getDoc(refUsers);
+        if (snapUsers.exists()) {
+          const data = snapUsers.data() as any;
+          objetivoKeyFromDb = data.goalKey;
           objetivoFromDb = data.objetivo ?? data.meta ?? data.goal;
         } else {
-          const refUsers = doc(db, "users", uid);
-          const snapUsers = await getDoc(refUsers);
-          if (snapUsers.exists()) {
-            const data = snapUsers.data() as any;
+          const refUsuarios = doc(db, "usuarios", uid);
+          const snapUsuarios = await getDoc(refUsuarios);
+          if (snapUsuarios.exists()) {
+            const data = snapUsuarios.data() as any;
+            objetivoKeyFromDb = data.goalKey;
             objetivoFromDb = data.objetivo ?? data.meta ?? data.goal;
           }
+        }
+
+        // Si ya guardaste 'goalKey' en el perfil, úsala directo
+        if (objetivoKeyFromDb && (routines as RoutinesMap)[objetivoKeyFromDb as keyof RoutinesMap]) {
+          setObjetivoTexto(objetivoFromDb ?? objetivoKeyFromDb);
+          setUserRoutines((routines as RoutinesMap)[objetivoKeyFromDb as keyof RoutinesMap]);
+          return;
         }
 
         if (!objetivoFromDb) {
@@ -53,26 +79,32 @@ export default function Rutinas() {
 
         setObjetivoTexto(objetivoFromDb);
 
+        // Mapeo robusto desde el texto mostrado al usuario
         const mapObjectiveToKey = (text: string) => {
           const t = text.toLowerCase().trim();
           if (t.includes("aument") && (t.includes("masa") || t.includes("muscul"))) return "subir_masa";
           if (t.includes("bajar") && (t.includes("peso") || t.includes("grasa"))) return "bajar_peso";
           if (t.includes("mantener")) return "mantener_peso";
+
+          // fallback: intentar que coincida exacto con una clave
           const cleaned = t.replace(/\s+/g, "_");
           if (Object.prototype.hasOwnProperty.call(routines, cleaned)) return cleaned;
           return null;
         };
 
         const key = mapObjectiveToKey(objetivoFromDb);
+
+        console.log("[Rutinas] objetivoTexto:", objetivoFromDb, " -> key:", key);
+
         if (!key) {
           setError(`Objetivo "${objetivoFromDb}" no coincide con ninguna rutina.`);
           setLoading(false);
           return;
         }
 
-        const rut = (routines as any)[key];
+        const rut = (routines as any)[key] as DayRoutine[];
         setUserRoutines(rut);
-      } catch (err: any) {
+      } catch (err) {
         console.error(err);
         setError("Error al cargar rutinas.");
       } finally {
@@ -97,7 +129,7 @@ export default function Rutinas() {
   const allCompleted =
     selectedRoutine !== null &&
     userRoutines &&
-    userRoutines[selectedRoutine].exercises.every((_: any, i: number) => completedExercises[i]);
+    userRoutines[selectedRoutine].exercises.every((_, i) => completedExercises[i]);
 
   if (loading) return <p className="loading">Cargando rutina...</p>;
   if (error) return <p className="error">{error}</p>;
@@ -128,7 +160,7 @@ export default function Rutinas() {
                 <span className="routine-letter">{String.fromCharCode(65 + i)}</span>
                 <div>
                   <h4>{day.day}</h4>
-                  <p>{day.description}</p>
+                  {day.description && <p>{day.description}</p>}
                 </div>
               </div>
               <button className="start-btn" onClick={() => handleSelectRoutine(i)}>
@@ -139,14 +171,13 @@ export default function Rutinas() {
         </>
       ) : (
         <div className="routine-detail">
-          {/* ✅ Botón de volver estilizado */}
           <button className="back-btn" onClick={() => setSelectedRoutine(null)}>
             ← Volver a las rutinas
           </button>
 
           <h3>{userRoutines[selectedRoutine].day}</h3>
           <div className="exercise-list">
-            {userRoutines[selectedRoutine].exercises.map((ex: any, i: number) => (
+            {userRoutines[selectedRoutine].exercises.map((ex, i) => (
               <div key={i} className={`exercise-card ${completedExercises[i] ? "done" : ""}`}>
                 <input
                   type="checkbox"

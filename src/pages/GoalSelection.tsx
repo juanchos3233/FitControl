@@ -1,69 +1,88 @@
-import { useState, useEffect } from "react"
-import { db } from "../firebase"
-import { doc, setDoc, getDoc } from "firebase/firestore"
-import { useNavigate } from "react-router-dom"
-import { auth } from "../firebase"
+import { useState, useEffect } from "react";
+import { db, auth } from "../firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+
+// Mapeo: texto del botón -> valor canónico que guardamos
+const GOALS: Record<string, "bajar" | "mantener" | "subir"> = {
+  "Bajar de peso": "bajar",
+  "Mantener peso": "mantener",
+  "Aumentar masa muscular": "subir",
+};
 
 export default function GoalSelection() {
-  const [selectedGoal, setSelectedGoal] = useState<string>("")
-  const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const navigate = useNavigate()
+  const [selectedGoal, setSelectedGoal] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
 
-  // Esperar a que Firebase cargue el usuario
+  // 1) Esperar sesión
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(u => {
-      if (u) setUser(u)
-      else navigate('/login', { replace: true })
-    })
-    return unsubscribe
-  }, [navigate])
+    const unsubscribe = auth.onAuthStateChanged((u) => {
+      if (u) setUser(u);
+      else navigate("/login", { replace: true });
+    });
+    return unsubscribe;
+  }, [navigate]);
 
-  // Redirigir si ya eligió meta
+  // 2) Si ya tiene goal -> envía a dashboard
   useEffect(() => {
-    if (!user) return
-    const checkMeta = async () => {
+    if (!user) return;
+    const checkGoal = async () => {
       try {
-        const userRef = doc(db, 'usuarios', user.uid)
-        const userDoc = await getDoc(userRef)
-        if (!userDoc.exists()) {
-          await setDoc(userRef, {}) // crear documento si no existe
-        } else if (userDoc.data()?.metaElegida) {
-          navigate('/dashboard', { replace: true })
+        const ref = doc(db, "users", user.uid);               // <-- colección unificada
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          // Crea el doc si no existe (vacío, sin romper nada)
+          await setDoc(ref, { createdAt: new Date().toISOString() }, { merge: true });
+          return;
         }
-      } catch (err) {
-        console.error(err)
+        const data = snap.data() || {};
+        if (data.goal) {
+          // Ya tiene objetivo -> a dashboard
+          navigate("/dashboard", { replace: true });
+        }
+        // Si no tiene goal, se queda en esta pantalla
+      } catch (e) {
+        console.error("Error leyendo perfil:", e);
       }
-    }
-    checkMeta()
-  }, [user, navigate])
+    };
+    checkGoal();
+  }, [user, navigate]);
 
-  const handleSelect = async (goal: string) => {
-    if (!user) return
-    setSelectedGoal(goal)
-    setLoading(true)
+  const handleSelect = async (goalText: string) => {
+    if (!user) return;
+    setSelectedGoal(goalText);
+    setLoading(true);
 
     try {
-      const userRef = doc(db, "usuarios", user.uid)
-      await setDoc(userRef, 
-        { objetivo: goal, metaElegida: true }, 
-        { merge: true } // merge asegura creación si no existía
-      )
-      navigate("/dashboard", { replace: true }) // redirige después de guardar
-    } catch (error) {
-      console.error("Error al guardar el objetivo:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+      const goalValue = GOALS[goalText];                      // 'bajar' | 'mantener' | 'subir'
+      const ref = doc(db, "users", user.uid);                 // <-- colección 'users'
+      await setDoc(
+        ref,
+        {
+          goal: goalValue,
+          profileCompleted: true,                             // <-- MUY IMPORTANTE para tu guard
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
-  if (!user) return <p className="small">Cargando usuario...</p>
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      console.error("Error al guardar el objetivo:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) return <p className="small">Cargando usuario...</p>;
 
   return (
     <div className="card">
       <h2 className="mb4">Selecciona tu objetivo</h2>
       <p className="small">¿Qué deseas lograr con tu entrenamiento?</p>
-      <div className="space"></div>
+      <div className="space" />
 
       <div className="goal-options">
         {["Bajar de peso", "Mantener peso", "Aumentar masa muscular"].map((goal) => (
@@ -81,5 +100,5 @@ export default function GoalSelection() {
 
       {loading && <p className="small">Guardando objetivo...</p>}
     </div>
-  )
+  );
 }

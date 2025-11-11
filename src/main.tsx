@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard'
 import ResetPassword from './pages/ResetPassword'
 import CompleteProfile from './pages/CompleteProfile'
 import ProtectedRoute from './pages/ProtectedRoute'
+import Alimentacion from './pages/Alimentacion' 
 import Navbar from './components/Navbar' // <-- importante: import de Navbar
 import Welcome from './pages/Welcome'
 import GoalSelection from './pages/GoalSelection'
@@ -36,7 +37,7 @@ const router = createBrowserRouter([
           { path: '/dashboard', element: <Dashboard /> },
           { path: '/complete-profile', element: <CompleteProfile /> },
           { path: '/objetivos', element: <GoalSelection /> },
-          // 🆕 Se agregan las nuevas rutas protegidas
+          { path: 'alimentacion', element: <Alimentacion /> },
           { path: '/rutinas', element: <Rutinas /> },
           { path: '/perfil', element: <Perfil /> },
         ],
@@ -64,7 +65,7 @@ const router = createBrowserRouter([
         children: [
           { path: '/dashboard', element: <Dashboard /> },
           { path: '/complete-profile', element: <CompleteProfile /> },
-          // 🆕 Se agregan también aquí para asegurar navegación por Navbar
+          { path: 'alimentacion', element: <Alimentacion /> },
           { path: '/rutinas', element: <Rutinas /> },
           { path: '/perfil', element: <Perfil /> },
         ]

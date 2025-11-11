@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Logo from "./components/logo.js";
 import Navbar from "./components/Navbar";
-import { testConnection } from "./services/api"; // <-- Importa la función
+import { testConnection } from "./services/api.js"; // <-- Importa la función
 
 export default function App() {
   const location = useLocation();

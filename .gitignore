@@ -1,31 +1,31 @@
-# ---- Node / Vite ----
+# Node/Vite
 node_modules/
 dist/
-.vite/
+build/
+.storybook-out/
+vite.cache/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# ---- Env (claves privadas) ----
+# Env
 .env
 .env.*
 !.env.example
-!.env.sample
+.env.local
 
-# ---- Sistema / IDE ----
+# Editor/OS
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
 
-# ---- Capacitor / Android Studio ----
-android/.gradle/
-android/.idea/
-android/build/
+# Capacitor/Expo (si aplica)
 android/app/build/
-android/capacitor-cordova-android-plugins/build/
-android/local.properties
-android/captures/
-.gradle/
-
-# ---- Output APKs ----
-*.apk
-*.aab
+android/build/
+ios/build/
+ios/Pods/
+.expo/
