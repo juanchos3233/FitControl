@@ -61,8 +61,8 @@ export default function Nutrition(){
             ))}
           </div>
 
-          <div className="space"></div>
-          <button className="secondary" onClick={()=>load(u.uid)}>Actualizar</button>
+      
+          
         </div>
       )}
     </div>

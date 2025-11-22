@@ -1,162 +1,143 @@
 import React, { useEffect, useState } from 'react';
-import { auth } from '../firebase'; // ⬅️ ajusta la ruta si tu archivo es distinto
-import { getUserProfile, updateGoal } from '../services/profile';
+import { auth } from '../firebase';
+import { saveUserProfile, getUserProfile } from '../services/profile';
 import { apiGenerateNutritionPlan } from '../services/api';
 import type { UserProfile } from '../types/models';
+import { signOut } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
-/**
- * Página de Perfil:
- * - Muestra datos guardados del usuario
- * - Permite cambiar el objetivo (bajar/mantener/subir)
- * - Opcional: regenerar plan de alimentación con el nuevo objetivo
- */
 export default function Perfil() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [goal, setGoal] = useState<UserProfile['goal']>('mantener');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const nav = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
     (async () => {
       try {
         const p = await getUserProfile();
-        if (mounted) {
-          setProfile(p);
-          setGoal(p?.goal ?? 'mantener');
-        }
-      } catch (e: any) {
-        if (mounted) setError(e?.message || 'No se pudo cargar el perfil.');
+        setForm(p);
+      } catch {
+        setError("No se pudo cargar el perfil.");
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     })();
-    return () => { mounted = false; };
   }, []);
 
-  const saveGoalOnly = async () => {
-    if (!profile) return;
-    setSaving(true);
-    setError(null);
-    setMessage(null);
-    try {
-      await updateGoal(goal);
-      const updated = await getUserProfile();
-      setProfile(updated);
-      setMessage('Objetivo actualizado.');
-    } catch (e: any) {
-      setError(e?.message || 'No se pudo actualizar el objetivo.');
-    } finally {
-      setSaving(false);
-    }
+  const logout = async () => {
+    await signOut(auth);
+    nav("/login");
   };
 
-  const saveGoalAndRegeneratePlan = async () => {
-    if (!profile) return;
+  const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (!form) return;
+    setForm(prev => ({
+      ...prev!,
+      [e.target.name]: ['edad', 'peso', 'altura'].includes(e.target.name)
+        ? Number(e.target.value)
+        : e.target.value
+    }));
+  };
+
+  const saveProfile = async () => {
+    if (!form) return;
     setSaving(true);
     setError(null);
     setMessage(null);
-    try {
-      await updateGoal(goal);
 
-      // Re-generar plan usando los datos actuales del perfil:
+    try {
+      await saveUserProfile(form);
+
+      // Generar rutina
       const u = auth.currentUser!;
-      if (
-        profile.sexo &&
-        typeof profile.edad === 'number' &&
-        typeof profile.peso === 'number' &&
-        typeof profile.altura === 'number' &&
-        profile.actividad
-      ) {
-        await apiGenerateNutritionPlan({
-          uid: u.uid,
-          goal,
-          profile: {
-            sexo: profile.sexo,
-            edad: profile.edad,
-            peso: profile.peso,
-            altura: profile.altura,
-            actividad: profile.actividad,
-          },
-        });
-        setMessage('Objetivo actualizado y plan regenerado.');
-      } else {
-        setMessage('Objetivo actualizado. (Completa tu perfil para poder regenerar el plan)');
-      }
+      await apiGenerateNutritionPlan({ uid: u.uid, goal: form.goal, profile: form });
 
-      const updated = await getUserProfile();
-      setProfile(updated);
-    } catch (e: any) {
-      setError(e?.message || 'No se pudo actualizar el objetivo o regenerar el plan.');
+      setMessage("Información actualizada ✔");
+
+      // Redirige después de guardar
+      setTimeout(() => nav("/rutinas"), 1200);
+
+    } catch {
+      setError("Error al actualizar perfil");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return null; // o un loader
+  if (loading || !form) return null;
 
   return (
-    <div className="container" style={{ maxWidth: 720, margin: '48px auto' }}>
-      <h2>Perfil</h2>
+    <div className="perfil-container">
+      <h2 className="perfil-title">Perfil</h2>
 
-      {error && (
-        <div className="card" style={{ marginTop: 12, padding: 12, color: '#f66' }}>
-          {error}
-        </div>
-      )}
-      {message && (
-        <div className="card" style={{ marginTop: 12, padding: 12 }}>
-          {message}
-        </div>
-      )}
+      {error && <div className="card error">{error}</div>}
+      {message && <div className="card success">{message}</div>}
 
-      {!profile && (
-        <div className="card" style={{ marginTop: 16, padding: 16 }}>
-          No se encontró tu perfil. Ve a <b>Completar perfil</b> para registrar tus datos.
-        </div>
-      )}
+      <div className="card perfil-card">
 
-      {profile && (
-        <div className="card" style={{ padding: 16, marginTop: 16 }}>
-          <div
-            className="grid"
-            style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}
-          >
-            <div><b>Sexo:</b> {profile.sexo ?? '-'}</div>
-            <div><b>Edad:</b> {profile.edad ?? '-'}</div>
-            <div><b>Peso:</b> {profile.peso ?? '-'} kg</div>
-            <div><b>Altura:</b> {profile.altura ?? '-'} cm</div>
-            <div><b>Actividad:</b> {profile.actividad ?? '-'}</div>
-            <div><b>Objetivo actual:</b> {profile.goal ?? '-'}</div>
-          </div>
+        {/* FORMULARIO */}
+        <div className="perfil-grid">
+          <label>Sexo
+            <select name="sexo" value={form.sexo} onChange={onChange}>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+            </select>
+          </label>
 
-          <hr style={{ margin: '16px 0' }} />
+          <label>Edad
+            <input type="number" name="edad" value={form.edad} onChange={onChange} />
+          </label>
 
-          <label>
-            Cambiar objetivo:{' '}
-            <select
-              disabled={saving}
-              value={goal}
-              onChange={(e) => setGoal(e.target.value as UserProfile['goal'])}
-            >
+          <label>Peso (kg)
+            <input type="number" name="peso" value={form.peso} onChange={onChange} />
+          </label>
+
+          <label>Altura (cm)
+            <input type="number" name="altura" value={form.altura} onChange={onChange} />
+          </label>
+
+          <label>Actividad
+            <select name="actividad" value={form.actividad} onChange={onChange}>
+              <option value="sedentario">Sedentario</option>
+              <option value="ligero">Ligero</option>
+              <option value="moderado">Moderado</option>
+              <option value="intenso">Intenso</option>
+              <option value="atleta">Atleta</option>
+            </select>
+          </label>
+
+          <label>Objetivo
+            <select name="goal" value={form.goal} onChange={onChange}>
               <option value="bajar">Bajar peso</option>
               <option value="mantener">Mantener peso</option>
               <option value="subir">Subir peso</option>
             </select>
           </label>
-
-          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-            <button disabled={saving} onClick={saveGoalOnly}>
-              {saving ? 'Guardando…' : 'Guardar objetivo'}
-            </button>
-            <button disabled={saving} onClick={saveGoalAndRegeneratePlan}>
-              {saving ? 'Procesando…' : 'Guardar + regenerar plan'}
-            </button>
-          </div>
         </div>
-      )}
+
+        {/* 🔥 BOTÓN PRINCIPAL */}
+        <div className="perfil-buttons">
+          <button className="btn primary" disabled={saving} onClick={saveProfile}>
+            {saving ? (
+              <span className="loading-content">
+                <span className="spinner"></span> Generando...
+              </span>
+            ) : (
+              "Guardar + regenerar plan"
+            )}
+          </button>
+        </div>
+
+        {/* BOTÓN CERRAR SESIÓN */}
+        <button className="btn primary" onClick={logout} style={{ marginTop: 20 }}>
+          Cerrar Sesión
+        </button>
+
+      </div>
     </div>
   );
 }

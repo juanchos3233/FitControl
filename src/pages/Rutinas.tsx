@@ -44,12 +44,12 @@ export default function Rutinas() {
 
         const uid = user.uid;
 
-        // 1) Buscar primero en 'users', luego en 'usuarios'
         let objetivoFromDb: string | undefined;
         let objetivoKeyFromDb: string | undefined;
 
         const refUsers = doc(db, "users", uid);
         const snapUsers = await getDoc(refUsers);
+
         if (snapUsers.exists()) {
           const data = snapUsers.data() as any;
           objetivoKeyFromDb = data.goalKey;
@@ -57,6 +57,7 @@ export default function Rutinas() {
         } else {
           const refUsuarios = doc(db, "usuarios", uid);
           const snapUsuarios = await getDoc(refUsuarios);
+
           if (snapUsuarios.exists()) {
             const data = snapUsuarios.data() as any;
             objetivoKeyFromDb = data.goalKey;
@@ -64,7 +65,7 @@ export default function Rutinas() {
           }
         }
 
-        // Si ya guardaste 'goalKey' en el perfil, úsala directo
+        // Si ya está guardado goalKey usa directo
         if (objetivoKeyFromDb && (routines as RoutinesMap)[objetivoKeyFromDb as keyof RoutinesMap]) {
           setObjetivoTexto(objetivoFromDb ?? objetivoKeyFromDb);
           setUserRoutines((routines as RoutinesMap)[objetivoKeyFromDb as keyof RoutinesMap]);
@@ -79,22 +80,19 @@ export default function Rutinas() {
 
         setObjetivoTexto(objetivoFromDb);
 
-        // Mapeo robusto desde el texto mostrado al usuario
         const mapObjectiveToKey = (text: string) => {
           const t = text.toLowerCase().trim();
-          if (t.includes("aument") && (t.includes("masa") || t.includes("muscul"))) return "subir_masa";
-          if (t.includes("bajar") && (t.includes("peso") || t.includes("grasa"))) return "bajar_peso";
+         
+          if (t.includes("subir")) return "subir_masa";
+          if (t.includes("bajar")) return "bajar_peso";
           if (t.includes("mantener")) return "mantener_peso";
-
-          // fallback: intentar que coincida exacto con una clave
-          const cleaned = t.replace(/\s+/g, "_");
-          if (Object.prototype.hasOwnProperty.call(routines, cleaned)) return cleaned;
+          
           return null;
         };
 
         const key = mapObjectiveToKey(objetivoFromDb);
 
-        console.log("[Rutinas] objetivoTexto:", objetivoFromDb, " -> key:", key);
+        console.log("[Rutinas] Objetivo:", objetivoFromDb, " -> Key:", key);
 
         if (!key) {
           setError(`Objetivo "${objetivoFromDb}" no coincide con ninguna rutina.`);
@@ -102,8 +100,7 @@ export default function Rutinas() {
           return;
         }
 
-        const rut = (routines as any)[key] as DayRoutine[];
-        setUserRoutines(rut);
+        setUserRoutines((routines as any)[key]);
       } catch (err) {
         console.error(err);
         setError("Error al cargar rutinas.");
@@ -111,12 +108,13 @@ export default function Rutinas() {
         setLoading(false);
       }
     };
+
     load();
   }, []);
 
   const handleSelectRoutine = (index: number) => {
     setCompletedExercises({});
-    setTimeout(() => setSelectedRoutine(index), 0);
+    setSelectedRoutine(index);
   };
 
   const handleCompleteExercise = (i: number) => {

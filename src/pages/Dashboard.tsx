@@ -209,7 +209,7 @@ export default function Dashboard(){
       </div>
 
       <div className="space"></div>
-      <button className="secondary" onClick={logout}>Cerrar sesión</button>
+      {/* 🔥 Botón de cerrar sesión eliminado */}
     </div>
   )
 }
