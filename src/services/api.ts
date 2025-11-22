@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Lee del .env.local, si no existe usa 4000
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// ⬇ Primero intenta leer VITE_API_URL, si no existe usa el backend en Render
+const API_URL = import.meta.env.VITE_API_URL || "https://backend-funcional.onrender.com";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -22,7 +22,13 @@ export const testConnection = async () => {
 export async function apiGenerateNutritionPlan(payload: {
   uid: string;
   goal: 'subir' | 'bajar' | 'mantener';
-  profile: { sexo: 'M'|'F'; edad: number; peso: number; altura: number; actividad: 'sedentario'|'ligero'|'moderado'|'intenso'|'atleta'; };
+  profile: {
+    sexo: 'M'|'F';
+    edad: number;
+    peso: number;
+    altura: number;
+    actividad: 'sedentario'|'ligero'|'moderado'|'intenso'|'atleta';
+  };
 }) {
   const { data } = await api.post('/api/nutrition/generate', payload);
   return data;
@@ -33,5 +39,5 @@ export async function apiGetCurrentPlan(uid: string) {
   return data;
 }
 
-
 export default api;
+
