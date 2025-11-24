@@ -10,8 +10,15 @@ import Dashboard from './pages/Dashboard'
 import ResetPassword from './pages/ResetPassword'
 import CompleteProfile from './pages/CompleteProfile'
 import ProtectedRoute from './pages/ProtectedRoute'
+import Alimentacion from './pages/Alimentacion' 
 import Navbar from './components/Navbar' // <-- importante: import de Navbar
 import Welcome from './pages/Welcome'
+import GoalSelection from './pages/GoalSelection'
+import Terminos from "./pages/Terminos"
+
+// 🆕 Nuevos imports (rutinas y perfil)
+import Rutinas from './pages/Rutinas'
+import Perfil from './pages/Perfil'
 
 const router = createBrowserRouter([
   {
@@ -22,15 +29,24 @@ const router = createBrowserRouter([
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
       { path: '/reset-password', element: <ResetPassword /> },
+     {path: '/terminos', element: <Terminos />},
+
+
 
       {
         element: <ProtectedRoute />,
         children: [
+          
           { path: '/dashboard', element: <Dashboard /> },
           { path: '/complete-profile', element: <CompleteProfile /> },
+          { path: '/objetivos', element: <GoalSelection /> },
+          { path: 'alimentacion', element: <Alimentacion /> },
+          { path: '/rutinas', element: <Rutinas /> },
+          { path: '/perfil', element: <Perfil /> },
         ],
       },
     ],
+    
   },
   { path: '/', element: <App />, children: [
     { index: true, element: <Login /> },
@@ -52,12 +68,13 @@ const router = createBrowserRouter([
         children: [
           { path: '/dashboard', element: <Dashboard /> },
           { path: '/complete-profile', element: <CompleteProfile /> },
-          // Si más rutas protegidas: agrégalas aquí (rutinas, alimentación, perfil, etc.)
+          { path: 'alimentacion', element: <Alimentacion /> },
+          { path: '/rutinas', element: <Rutinas /> },
+          { path: '/perfil', element: <Perfil /> },
         ]
       }
     ]},
   ]}
-
 ])
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

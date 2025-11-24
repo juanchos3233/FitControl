@@ -1,0 +1,143 @@
+.routine-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #e5e7eb;
+}
+
+.title {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.goal-text {
+  text-align: center;
+  margin-bottom: 16px;
+  color: #a3bffa;
+}
+
+.week-days {
+  display: flex;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.day {
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.day.active {
+  color: var(--brand1);
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 14px 0;
+  font-size: 1.2rem;
+  color: var(--brand2);
+}
+
+.routine-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: 0.3s ease;
+}
+
+.routine-card:hover {
+  border-color: var(--brand1);
+  transform: scale(1.02);
+}
+
+.routine-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.routine-letter {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--brand1);
+}
+
+.start-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--brand1), var(--brand2));
+  color: #0b1220;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.start-btn:hover {
+  opacity: 0.9;
+}
+
+.exercise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exercise-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  transition: 0.3s;
+}
+
+.exercise-card.done {
+  opacity: 0.6;
+  border-color: var(--brand1);
+}
+
+.finish-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--brand1), var(--brand2));
+  color: #0b1220;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-btn {
+  background: linear-gradient(90deg, #00b4db, #6100b0);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0, 140, 255, 0.3);
+  transition: all 0.25s ease-in-out;
+}
+
+.back-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 3px 8px rgba(0, 140, 255, 0.4);
+  background: linear-gradient(90deg, #0099cc, #0077aa);
+}

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
-import { auth } from '../firebase'
+import { auth, db } from '../firebase'
 import { useNavigate, Link } from 'react-router-dom'
 import { isEmail } from '../lib/validators'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 
 export default function Login(){
   const [email, setEmail] = useState('')
@@ -12,10 +13,32 @@ export default function Login(){
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
+  // Redirigir usuarios ya logueados
   useEffect(()=>{
-    const unsub = onAuthStateChanged(auth, (u)=>{ if(u) navigate('/dashboard') })
+    const unsub = onAuthStateChanged(auth, async (user)=>{
+      if(user && window.location.pathname === '/login'){
+        try{
+          const userRef = doc(db, 'usuarios', user.uid)
+          const userDoc = await getDoc(userRef)
+
+          // Crear documento vacío si no existe
+          if(!userDoc.exists()){
+            await setDoc(userRef, {})
+          }
+
+          const metaElegida = userDoc.data()?.metaElegida
+          if(metaElegida){
+            navigate('/dashboard', { replace: true })
+          } else {
+            navigate('/objetivos', { replace: true })
+          }
+        }catch{
+          navigate('/objetivos', { replace: true })
+        }
+      }
+    })
     return ()=>unsub()
-  }, [])
+  }, [navigate])
 
   const emailOk = isEmail(email)
   const passOk = password.trim().length > 0
@@ -24,10 +47,28 @@ export default function Login(){
   async function onSubmit(e: React.FormEvent){
     e.preventDefault()
     if(!formOk) return
-    setError(null); setLoading(true)
+    setError(null)
+    setLoading(true)
     try{
-      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password)
-      navigate('/dashboard', { replace: true })
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password)
+      const uid = userCredential.user.uid
+
+      const userRef = doc(db, 'usuarios', uid)
+      const userDoc = await getDoc(userRef)
+
+      // Crear documento vacío si no existe
+      if(!userDoc.exists()){
+        await setDoc(userRef, {})
+      }
+
+      const metaElegida = userDoc.data()?.metaElegida
+
+      if(metaElegida){
+        navigate('/dashboard', { replace: true })
+      } else {
+        navigate('/objetivos', { replace: true })
+      }
+
     }catch(err:any){
       const code = err?.code || ''
       if(code.includes('invalid-credential')) setError('Email o contraseña inválidos.')
@@ -55,7 +96,7 @@ export default function Login(){
             onChange={e=>setEmail(e.target.value)}
             type="email"
             placeholder="tucorreo@dominio.com"
-            aria-invalid="false"
+            aria-invalid={emailError ? 'true' : 'false'}
             aria-describedby={emailError ? 'login-email-error' : undefined}
           />
         </div>
@@ -71,7 +112,7 @@ export default function Login(){
             onChange={e=>setPassword(e.target.value)}
             type={show ? 'text' : 'password'}
             placeholder="••••••••"
-            aria-invalid="false"
+            aria-invalid={passError ? 'true' : 'false'}
             aria-describedby={passError ? 'login-pass-error' : undefined}
           />
           <button type="button" onClick={()=>setShow(v=>!v)} aria-label={show?'Ocultar contraseña':'Mostrar contraseña'}>

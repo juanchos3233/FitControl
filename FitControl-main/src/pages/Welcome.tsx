@@ -24,10 +24,26 @@ const Welcome: React.FC = () => {
         Tu compañero para mejorar tu rendimiento físico y mantener un control completo de tu progreso.
       </p>
 
-      {/* Botón de inicio */}
+      {/* Botón con la estética idéntica */}
       <button
+        type="button"
         onClick={handleStart}
-        className="bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-semibold py-2 px-6 rounded-full shadow-md hover:scale-105 transition-transform duration-300"
+        style={{
+          width: '100%',
+          padding: '14px 18px',
+          borderRadius: '999px',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: 16,
+          fontWeight: '500',
+          background: 'linear-gradient(90deg, #22D3EE 0%, #6366F1 100%)',
+          color: '#1E293B',
+          transition: '0.2s',
+          opacity: 1,
+          fontFamily: 'sans-serif',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+          maxWidth: 280,
+        }}
       >
         Comenzar
       </button>

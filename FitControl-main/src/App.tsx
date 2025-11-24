@@ -1,14 +1,28 @@
 // src/App.tsx
-import { Outlet, useLocation } from 'react-router-dom'
-import Logo from './components/logo.js'
-import Navbar from './components/Navbar' // <-- import agregado (mínimo)
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import Logo from "./components/logo.js";
+import Navbar from "./components/Navbar";
+import { testConnection } from "./services/api.js"; // <-- Importa la función
 
-export default function App(){
-  const location = useLocation()
+export default function App() {
+  const location = useLocation();
 
-  // Rutas públicas donde NO queremos mostrar la navbar
-  const hideNavbarPaths = ['/', '/login', '/register', '/reset-password', '/complete-profile']
-  const hideNavbar = hideNavbarPaths.includes(location.pathname)
+  // Rutas donde no queremos mostrar la barra de navegación
+  const hideNavbarPaths = ["/", "/login", "/register", "/reset-password", "/complete-profile"];
+  const hideNavbar = hideNavbarPaths.includes(location.pathname);
+
+  // 🔧 Probar conexión con el backend al iniciar la app
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        await testConnection();
+      } catch (error) {
+        console.error("❌ No se pudo conectar al backend:", error);
+      }
+    };
+    checkBackend();
+  }, []);
 
   return (
     <div className="container">
@@ -23,8 +37,8 @@ export default function App(){
         <p className="small center">© {new Date().getFullYear()} FitControl</p>
       </div>
 
-      {/* Agregamos la navbar aquí de forma no intrusiva y condicionada */}
+      {/* Navbar solo en rutas protegidas */}
       {!hideNavbar && <Navbar />}
     </div>
-  )
+  );
 }

@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { auth, db } from '../firebase'
-import { signOut } from 'firebase/auth'
 import { collection, doc, getDoc, getDocs, orderBy, query, setDoc, Timestamp, where } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
 import type { UserProfile, DashboardStats, WeekPoint, Workout } from '../types/models'
 import { addDays, formatShort, startOfDay } from '../lib/date'
-
 
 export default function Dashboard(){
   const navigate = useNavigate()
@@ -22,11 +20,13 @@ export default function Dashboard(){
   const [wDate, setWDate] = useState<string>(()=> new Date().toISOString().slice(0,10))
   const [saving, setSaving] = useState(false)
 
+  // --- Estado para el gráfico interactivo ---
+  const [selectedDay, setSelectedDay] = useState<WeekPoint | null>(null)
+
   useEffect(()=>{
     cancelled.current = false
     init()
     return ()=>{ cancelled.current = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function init(){
@@ -35,7 +35,6 @@ export default function Dashboard(){
       const u = auth.currentUser
       if(!u){ navigate('/login'); return }
 
-      // 1) Carga perfil
       const pref = doc(db, 'users', u.uid)
       const psnap = await getDoc(pref)
       if(!psnap.exists()){
@@ -44,7 +43,6 @@ export default function Dashboard(){
       const p = { id: u.uid, ...(psnap.data() as any) } as UserProfile
       if(!cancelled.current) setProfile(p)
 
-      // 2) Carga últimas 2 semanas de workouts
       const today = startOfDay(new Date())
       const from = addDays(today, -13)
       const wref = collection(db, 'users', u.uid, 'workouts')
@@ -52,7 +50,6 @@ export default function Dashboard(){
       const snap = await getDocs(qy)
       const workouts: Workout[] = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as any
 
-      // 3) Agregados de 7 días
       const week: WeekPoint[] = []
       let totalSessions = 0, totalCalories = 0, totalMinutes = 0
 
@@ -104,10 +101,7 @@ export default function Dashboard(){
     }
   }
 
-  async function logout(){
-    await signOut(auth)
-    navigate('/login', { replace: true })
-  }
+  
 
   const chart = useMemo(()=>{
     if(!stats) return { max: 0, points: [] as {x:number,y:number,label:string,cal:number,min:number,ses:number}[] }
@@ -125,7 +119,7 @@ export default function Dashboard(){
   return (
     <div>
       <div className="card">
-        <h2 className="mb4">Hola, {profile?.nombre ?? 'atleta'} 👋</h2>
+        <h2 className="mb4">Hola, {profile?.firstName ?? 'atleta'} 👋</h2>
         <p className="small">Este es tu resumen de la semana.</p>
       </div>
 
@@ -154,15 +148,24 @@ export default function Dashboard(){
           <h3 className="mb4">Progreso semanal</h3>
           {stats && stats.week.length > 0 ? (
             <>
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="chart" role="img" aria-label="Calorías por día de la semana">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="chart">
                 <line x1="0" y1="100" x2="100" y2="100" stroke="#334155" strokeWidth="0.6" />
                 {chart.points.map((p, i)=>(
-                  <g key={i}>
-                    <rect x={p.x-4} y={p.y} width="8" height={100 - p.y} rx="1.2" fill="#22d3ee" />
+                  <g key={i} onClick={()=>setSelectedDay(stats.week[i])} style={{cursor:'pointer'}}>
+                    <rect x={p.x-4} y={p.y} width="8" height={100 - p.y} rx="1.2"
+                      fill={selectedDay?.label === p.label ? '#38bdf8' : '#22d3ee'}
+                    />
                     <text x={p.x} y={98} fontSize="3" textAnchor="middle" fill="#9fb3c8">{p.label}</text>
                   </g>
                 ))}
               </svg>
+
+              {selectedDay && (
+                <div className="chart-info mt2">
+                  <p><strong>{selectedDay.label}:</strong> {selectedDay.calories} kcal, {selectedDay.minutes} min, {selectedDay.sessions} sesión(es)</p>
+                </div>
+              )}
+
               <div className="chart-legend">
                 <span><i className="legend-dot legend-cal"></i>Calorías</span>
               </div>
@@ -174,69 +177,35 @@ export default function Dashboard(){
         <div className="panel">
           <h3 className="mb4">Registro rápido</h3>
 
-          <form className="quick-form" onSubmit={onQuickAdd} aria-labelledby="quick-form-title">
-            <span id="quick-form-title" className="sr-only">Formulario de registro rápido de entrenamiento</span>
-
-            <label className="sr-only" htmlFor="qtype">Tipo</label>
-            <select
-              id="qtype"
-              className="select"
-              value={wType}
-              onChange={e=>setWType(e.target.value as any)}
-              title="Tipo de entrenamiento"
-              aria-label="Tipo de entrenamiento"
-            >
+          <form className="quick-form" onSubmit={onQuickAdd}>
+            <label htmlFor="qtype">Tipo de entrenamiento</label>
+            <select id="qtype" className="select" value={wType} onChange={e=>setWType(e.target.value as any)}>
               <option value="cardio">Cardio</option>
               <option value="fuerza">Fuerza</option>
               <option value="movilidad">Movilidad</option>
               <option value="otro">Otro</option>
             </select>
 
-            <label className="sr-only" htmlFor="qmin">Minutos</label>
-            <input
-              id="qmin"
-              className="input-num"
-              type="number"
-              min={0}
-              value={wMin}
-              onChange={e=>setWMin(Number(e.target.value))}
-              placeholder="Minutos"
-              title="Minutos de la sesión"
-            />
+            <label htmlFor="qmin">Minutos</label>
+            <input id="qmin" className="input-num" type="number" min={0} value={wMin} onChange={e=>setWMin(Number(e.target.value))} />
 
-            <label className="sr-only" htmlFor="qkcal">Calorías</label>
-            <input
-              id="qkcal"
-              className="input-num"
-              type="number"
-              min={0}
-              value={wKcal}
-              onChange={e=>setWKcal(Number(e.target.value))}
-              placeholder="Kcal"
-              title="Calorías estimadas"
-            />
+            <label htmlFor="qkcal">Calorías</label>
+            <input id="qkcal" className="input-num" type="number" min={0} value={wKcal} onChange={e=>setWKcal(Number(e.target.value))} />
 
-            <label className="sr-only" htmlFor="qdate">Fecha</label>
-            <input
-              id="qdate"
-              className="input-date"
-              type="date"
-              value={wDate}
-              onChange={e=>setWDate(e.target.value)}
-              title="Fecha del entrenamiento"
-            />
+            <label htmlFor="qdate">Fecha</label>
+            <input id="qdate" className="input-date" type="date" value={wDate} onChange={e=>setWDate(e.target.value)} />
 
-            <button className="btn primary" disabled={saving} type="submit" aria-label="Guardar registro rápido">
+            <button className="btn primary" disabled={saving} type="submit">
               {saving ? 'Guardando...' : 'Guardar'}
             </button>
           </form>
 
-          {err && (<><div className="space"></div><div className="error" role="alert">{err}</div></>)}
+          {err && (<><div className="space"></div><div className="error">{err}</div></>)}
         </div>
       </div>
 
       <div className="space"></div>
-      <button className="secondary" onClick={logout}>Cerrar sesión</button>
+      {/* 🔥 Botón de cerrar sesión eliminado */}
     </div>
   )
 }
